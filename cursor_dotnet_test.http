@@ -1,0 +1,100 @@
+@host = http://localhost:5223
+
+### Register a new user
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123!"
+}
+
+### Login and get JWT token
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "Test123!"
+}
+
+### -------------------------------------------------------
+### Set the token from the login response above
+@token = <paste-token-here>
+### -------------------------------------------------------
+
+### ===================== TEAMS =====================
+
+### Create a team
+POST {{host}}/teams
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "teamName": "Manchester United",
+  "managerName": "Erik ten Hag"
+}
+
+### Get all teams (paginated, sorted)
+GET {{host}}/teams?page=1&pageSize=10&sortBy=teamName&sortDirection=asc
+Authorization: Bearer {{token}}
+
+### Get team by ID (replace with actual ID from create response)
+@teamId = <paste-team-id-here>
+
+GET {{host}}/teams/{{teamId}}
+Authorization: Bearer {{token}}
+
+### Update a team
+PUT {{host}}/teams/{{teamId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "teamName": "Manchester United FC",
+  "managerName": "Erik ten Hag"
+}
+
+### Delete a team
+DELETE {{host}}/teams/{{teamId}}
+Authorization: Bearer {{token}}
+
+### ===================== PLAYERS =====================
+
+### Create a player (use a valid teamId)
+POST {{host}}/players
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "playerName": "Marcus Rashford",
+  "playerPosition": "Forward",
+  "playerAge": 26,
+  "teamId": "{{teamId}}"
+}
+
+### Get all players by team
+GET {{host}}/players?teamId={{teamId}}
+Authorization: Bearer {{token}}
+
+### Get player by ID (replace with actual ID from create response)
+@playerId = <paste-player-id-here>
+
+GET {{host}}/players/{{playerId}}
+Authorization: Bearer {{token}}
+
+### Update a player
+PUT {{host}}/players/{{playerId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "playerName": "Marcus Rashford",
+  "playerPosition": "Left Wing",
+  "playerAge": 27,
+  "teamId": "{{teamId}}"
+}
+
+### Delete a player
+DELETE {{host}}/players/{{playerId}}
+Authorization: Bearer {{token}}

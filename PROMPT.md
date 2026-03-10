@@ -1,0 +1,26 @@
+I want an application to store soccer teams and soccer players in that team. Specification
+- .net9 with controllers (not minimal apis)
+- pure CRUD application
+- postgresql database started for dev in docker so create a docker-compose for that. port needs to be set to 5555 local and 5432 internal
+- database name will be soccer-db, username for local postgres and password for local is also postgres
+- I'll use EF Core Postgres with this and also use migrations set up for development in Program.cs
+- I need layered architecture. Layers will be: controllers, services, domain and persistence. Inside persistence I want a repository and datamodels. On the repository I'll use the DbContext from EF Core to interact with the Db so inject that there.
+- I don't want table normalization between the datamodels Team and Player. A Player will have a TeamId but that's a string and not mapped as a Foreign Key to EF Core so I can later on split the domains in 2 services if I want.
+- The Team will have as fields: TeamId (guid), TeamName (string), ManagerName (string). The ManagerName must be in just 1 team at a time and we'll assume that each ManagerName is unique.
+- The Player will have as fields: PlayerId (guid), PlayerName (string), PlayerPosition(string), PlayerAge(int), TeamId (guid)
+- on the models include the [Concurrency] decorator with a version for concurrency control
+- the controller should get a dto for the POST and PATCH/PUT requests in the format of for example CreateTeamRequest
+- rate limiting to the players controllers shall be added
+- the inputs shall be validated right away on the controllers
+- you should include a global exception handler. Errors with input validation should return status code 400 and the message for example. Account also for concurrency errors and temporary errors connecting to the db on the global exception handler.
+- This application will be stateless so the domain doesn't need anything fancy
+- I want the service to inherit interfaces that describe the use case so later on I can test in isolation in a easier way. Example ICreateTeam with a method CreateTeam(...) on the TeamsService (just one teams service so I can just inject it in the controller)
+- Add Microsoft Identity and [Authorize] decorator to protect all the endpoints. I want the Full thing with the tables also in Postgres and the endpoints for login and create accounts.
+- Provide a .http file to test manually all the endpoints
+- Routes should be /teams and /players 
+- I should be able to GET byId which returns 200 and the body, POST to create which returns status 201 and the Response DTO, PUT /id which returns 204 without body and DELETE /id which returns 204 without body
+- For logging the application should use ILogger from Microsoft. I want logs to have the request tracingId
+- Add Cors and allow all origins
+- Add a Redis Cache for frequent searches meaning all the GETs I have in the application. TTL must be sat to 60sec. You will need to add redis service to the docker-compose.yaml file. Whenever the Redis service is down, the application can't crash, therefore in that case it will just make a database lookup as usual. Having said that, RedisContext must be implemented in the Repositories classes. Don't forget that upon Update the entry in the cache must be invalidated and upon Delete the cache for that entry must also be invalidated.
+- Add health health checks for the application and postgresql and redis.
+- Implement Polly as a Circuit Breaker for Redis so it doesn't degradate service performance whenever redis is down. FailureRatio must be set in the settings as 0.5, SamplingDurationSeconds must be set to 10, MinimumThroughput must be set to 3 and BreakDurationSeconds must be 30
