@@ -1,6 +1,24 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: soccer-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__SoccerDb: Host=postgres;Port=5432;Database=soccer-db;Username=postgres;Password=postgres
+      ConnectionStrings__Redis: redis:6379
+    ports:
+      - "5223:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
   postgres:
-    image: postgres:latest
+    image: postgres:16
     container_name: soccer-db
     environment:
       POSTGRES_DB: soccer-db
@@ -10,6 +28,12 @@ services:
       - "5555:5432"
     volumes:
       - soccer-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d soccer-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   redis:
     image: redis:latest
